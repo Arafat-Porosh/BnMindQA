@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BnMindQA: মানসিক স্বাস্থ্য AI সহকারী</title>
+  <meta name="description" content="BnMindQA — বাংলা মানসিক স্বাস্থ্য প্রশ্নোত্তর সহকারী। Hybrid RAG + Fine-Tuned Gemma-3-4B-IT পরিচালিত একটি AI সিস্টেম।" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ── Background Orbs ── -->
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+
+  <!-- ── Settings Modal ── -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-header">
+        <div class="modal-icon">⚙️</div>
+        <h2 id="modal-title">API কনফিগারেশন</h2>
+      </div>
+      <div class="modal-body">
+        <label for="apiUrlInput" class="input-label">Ngrok Public URL</label>
+        <input
+          type="url"
+          id="apiUrlInput"
+          class="api-input"
+          placeholder="https://xxxx-xx-xx-xx-xx.ngrok-free.app"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <div class="modal-status" id="connectionStatus">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="statusText">সংযোগ পরীক্ষা করা হয়নি</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="testConnectionBtn">সংযোগ পরীক্ষা করুন</button>
+        <button class="btn btn-primary" id="saveSettingsBtn">সংরক্ষণ করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Main Layout ── -->
+  <div class="app-layout">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">🧠</div>
+          <div class="logo-text">
+            <span class="logo-title">BnMindQA</span>
+            <span class="logo-sub">মানসিক স্বাস্থ্য AI সহকারী</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-new-chat">
+        <button class="btn-new-chat" id="newChatBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          নতুন কথোপকথন
+        </button>
+      </div>
+
+      <div class="sidebar-history" id="chatHistory">
+        <p class="history-label">সাম্প্রতিক কথোপকথন</p>
+        <!-- History items injected by JS -->
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="system-info" id="systemInfo">
+          <div class="info-row">
+            <span class="info-label">মডেল</span>
+            <span class="info-value" id="infoModel">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">ডকুমেন্ট</span>
+            <span class="info-value" id="infoChunks">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-dot" id="connDot"></span>
+            <span class="info-value" id="connLabel">সংযুক্ত নয়</span>
+          </div>
+        </div>
+        <button class="btn-settings" id="openSettingsBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          সেটিংস
+        </button>
+      </div>
+    </aside>
+
+    <!-- ── Main Content ── -->
+    <main class="main-content">
+
+      <!-- Top Bar -->
+      <header class="topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <div class="topbar-title">BnMindQA: মানসিক স্বাস্থ্য AI সহকারী</div>
+        <div class="topbar-badge">
+          <span class="badge-dot" id="topBadgeDot"></span>
+          <span id="topBadgeText">অফলাইন</span>
+        </div>
+      </header>
+
+      <!-- Chat Area -->
+      <div class="chat-area" id="chatArea">
+
+        <!-- Welcome Screen -->
+        <div class="welcome-screen" id="welcomeScreen">
+          <div class="welcome-icon">🧠</div>
+          <h1 class="welcome-title">BnMindQA</h1>
+          <p class="welcome-sub">মানসিক স্বাস্থ্য AI সহকারী<br/>বাংলায় মানসিক স্বাস্থ্য বিষয়ক যেকোনো প্রশ্ন জিজ্ঞেস করুন।<br/>Fine-Tuned Gemma-3 + Hybrid RAG পরিচালিত।</p>
+
+          <div class="suggestion-grid">
+            <button class="suggestion-card" data-q="সিজোটাইপাল ব্যক্তিত্ব ব্যাধির প্রধান লক্ষণগুলো কী?">
+              <span class="suggestion-icon">💭</span>
+              <span>সিজোটাইপাল ব্যক্তিত্ব ব্যাধির প্রধান লক্ষণগুলো কী?</span>
+            </button>
+            <button class="suggestion-card" data-q="উদ্বেগজনিত ব্যাধি কী?">
+              <span class="suggestion-icon">😰</span>
+              <span>উদ্বেগজনিত ব্যাধি কী?</span>
+            </button>
+            <button class="suggestion-card" data-q="মানসিক চাপ কমানোর উপায় কী?">
+              <span class="suggestion-icon">🌿</span>
+              <span>মানসিক চাপ কমানোর উপায়?</span>
+            </button>
+            <button class="suggestion-card" data-q="সাবকর্টিকাল ডিমেনশিয়ায় মোটর সিস্টেমে কী ধরনের পরিবর্তন দেখা যায়?">
+              <span class="suggestion-icon">🕊️</span>
+              <span>সাবকর্টিকাল ডিমেনশিয়ায় মোটর সিস্টেমে কী ধরনের পরিবর্তন দেখা যায়?</span>
+            </button>
+          </div>
+
+          <div class="setup-notice" id="setupNotice">
+            <div class="notice-icon">⚙️</div>
+            <div>
+              <strong>প্রথমে API সংযোগ করুন</strong>
+              <p>Kaggle নোটবুক চালু করে ngrok URL সেটিংসে পেস্ট করুন।</p>
+            </div>
+            <button class="btn btn-sm btn-primary" id="openSettingsBtnWelcome">সেটিংস খুলুন</button>
+          </div>
+        </div>
+
+        <!-- Messages Container -->
+        <div class="messages-container" id="messagesContainer"></div>
+
+      </div>
+
+      <!-- Input Area -->
+      <div class="input-area">
+        <div class="input-wrapper">
+          <textarea
+            id="questionInput"
+            class="question-input"
+            placeholder="বাংলায় প্রশ্ন লিখুন… (Enter চাপুন অথবা বোতাম ক্লিক করুন)"
+            rows="1"
+            aria-label="প্রশ্ন লিখুন"
+          ></textarea>
+          <button class="send-btn" id="sendBtn" aria-label="প্রশ্ন পাঠান" disabled>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+        <p class="input-hint">BnMindQA · Gemma-3-4B-IT · Hybrid RAG (ChromaDB + BM25 + RRF + Reranker) · বাংলা মানসিক স্বাস্থ্য</p>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ── Source Panel (slide-in) ── -->
+  <div class="source-panel" id="sourcePanel">
+    <div class="source-panel-header">
+      <h3>📚 তথ্যসূত্র</h3>
+      <button class="close-panel-btn" id="closeSourcePanel">✕</button>
+    </div>
+    <div class="source-panel-body" id="sourcePanelBody"></div>
+  </div>
+  <div class="panel-overlay" id="panelOverlay"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
