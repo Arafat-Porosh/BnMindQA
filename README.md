@@ -15,7 +15,7 @@ BnMindQA is a Retrieval-Augmented Question Answering (RAG-QA) framework designed
 - Retrieval-grounded answer generation
 - Web-based user interface
 
-![BnMindQA Interface](https://github.com/Arafat-Porosh/BnMindQA/blob/5276d78344037a5ed8c5a0de7343d97943dbba24/bnmindqa_ui.png)
+![BnMindQA Interface](https://github.com/Arafat-Porosh/BnMindQA/blob/ea919640dc646f6bb931d01fbae3eb15214445da/bnmindqa_ui.png)
 
 ## Architecture
 
